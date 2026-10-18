@@ -1,0 +1,8 @@
+{
+  "appId": "dz.tlemcen.recruitaudit",
+  "appName": "الرقابة والتدقيق - تلمسان",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  }
+}
