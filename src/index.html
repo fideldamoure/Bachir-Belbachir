@@ -52,7 +52,7 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-base md:text-lg leading-tight">الجمهورية الجزائرية الديمقراطية الشعبية</h1>
-                    <p class="text-xs text-emerald-100">ولاية تلمسان/مديرية الإدارة المحلية/مصلحة الموارد البشرية</p>
+                    <p class="text-xs text-emerald-100">المديرية العامة للوظيفة العمومية والإصلاح الإداري - مفتشية ولاية تلمسان</p>
                 </div>
             </div>
             <div class="flex items-center space-x-2 space-x-reverse">
@@ -447,7 +447,7 @@
         <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-center sm:text-right">
             <div>
                 <p class="font-semibold text-slate-300">تطبيق الرقابة والتدقيق في مسابقات الجماعات المحلية - ولاية تلمسان</p>
-                <p class="text-[11px] text-slate-500">مصمم من طرف بلبشير بشير لتسهيل المطابقة للتشريع والتنظيم المعمول بهما في الوظيفة العمومية الجزائرية</p>
+                <p class="text-[11px] text-slate-500">مصمم لتسهيل المطابقة للتشريع والتنظيم المعمول بهما في الوظيفة العمومية الجزائرية</p>
             </div>
             <div class="text-left">
                 <span class="bg-slate-700 text-slate-300 px-2 py-1 rounded text-[10px]">تلمسان 13000 - الجزائر</span>
@@ -475,7 +475,43 @@
             { name: "فلاوسن", district: "فلاوسن" },
             { name: "بني سنوس", district: "بني سنوس" },
             { name: "العريشة", district: "سبدو" },
-            { name: "سيدي مجاهد", district: "بني بوسعيد" }
+            { name: "سيدي مجاهد", district: "بني بوسعيد" },
+            // --- باقي بلديات الولاية (المجموع 53 بلدية في 20 دائرة) ---
+            { name: "السواحلية", district: "الغزوات" },
+            { name: "تيانت", district: "الغزوات" },
+            { name: "دار يغمراسن", district: "الغزوات" },
+            { name: "بوحلو", district: "صبرة" },
+            { name: "جبالة", district: "ندرومة" },
+            { name: "بني ورسوس", district: "الرمشي" },
+            { name: "عين يوسف", district: "الرمشي" },
+            { name: "السبعة شيوخ", district: "الرمشي" },
+            { name: "الفحول", district: "الرمشي" },
+            { name: "القور", district: "سبدو" },
+            { name: "باب العسة", district: "باب العسة" },
+            { name: "السواني", district: "باب العسة" },
+            { name: "سوق الثلاثاء", district: "باب العسة" },
+            { name: "تيرني بني هديل", district: "منصورة" },
+            { name: "عين غرابة", district: "منصورة" },
+            { name: "بني مستار", district: "منصورة" },
+            { name: "واد الشولي", district: "أولاد ميمون" },
+            { name: "بني صميل", district: "أولاد ميمون" },
+            { name: "البويهي", district: "سيدي الجيلالي" },
+            { name: "عين فزة", district: "شتوان" },
+            { name: "عمير", district: "شتوان" },
+            { name: "هنين", district: "هنين" },
+            { name: "بني خلاد", district: "هنين" },
+            { name: "العزايل", district: "بني سنوس" },
+            { name: "بني بهدل", district: "بني سنوس" },
+            { name: "مسيردة الفواقة", district: "مرسى بن مهيدي" },
+            { name: "عين فتاح", district: "فلاوسن" },
+            { name: "العين الكبيرة", district: "فلاوسن" },
+            { name: "عين تالوت", district: "عين تالوت" },
+            { name: "عين النحالة", district: "عين تالوت" },
+            { name: "بن سكران", district: "بن سكران" },
+            { name: "سيدي عبد اللي", district: "بن سكران" },
+            { name: "أولاد رياح", district: "حناية" },
+            { name: "زناتة", district: "حناية" },
+            { name: "حمام بوغرارة", district: "مغنية" }
         ];
 
         // Default Initial Mock Candidates for Tlemcen
@@ -568,15 +604,18 @@
             selectMuni.innerHTML = '';
             candRes.innerHTML = '';
 
-            TLEMCEN_MUNICIPALITIES.forEach(m => {
+            // ترتيب أبجدي عربي لسهولة الاختيار، مع بقاء "تلمسان" هي الافتراضية
+            [...TLEMCEN_MUNICIPALITIES].sort((a, b) => a.name.localeCompare(b.name, 'ar')).forEach(m => {
                 const opt1 = document.createElement('option');
                 opt1.value = m.name;
                 opt1.textContent = `بلدية ${m.name} (دائرة ${m.district})`;
+                if (m.name === 'تلمسان') opt1.defaultSelected = true;
                 selectMuni.appendChild(opt1);
 
                 const opt2 = document.createElement('option');
                 opt2.value = m.name;
                 opt2.textContent = m.name;
+                if (m.name === 'تلمسان') opt2.defaultSelected = true;
                 candRes.appendChild(opt2);
             });
         }
