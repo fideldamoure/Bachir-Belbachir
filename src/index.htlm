@@ -1,0 +1,1100 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق الرقابة والتدقيق لمسابقات التوظيف - ولاية تلمسان</title>
+    <meta name="theme-color" content="#006233">
+    <link rel="stylesheet" href="vendor/tailwind.css">
+    <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="vendor/fonts.css">
+    <script src="vendor/jspdf.umd.min.js"></script>
+    <script src="vendor/html2canvas.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f1f5f9;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; font-size: 12pt; }
+            .print-card { border: none !important; box-shadow: none !important; }
+        }
+        .print-only { display: none; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- Official Top Bar -->
+    <header class="bg-dzgreen text-white shadow-lg no-print sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-2">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-dzgreen font-bold text-xl shadow">
+                    <i class="fa-solid font-bold text-dzred text-xl">🏛️</i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base md:text-lg leading-tight">الجمهورية الجزائرية الديمقراطية الشعبية</h1>
+                    <p class="text-xs text-emerald-100">المديرية العامة للوظيفة العمومية والإصلاح الإداري - مفتشية ولاية تلمسان</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 space-x-reverse">
+                <span class="bg-emerald-800 text-emerald-100 text-xs px-3 py-1.5 rounded-full border border-emerald-600 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    نظام الرقابة الآلية v2.5 (شامل الأسلاك)
+                </span>
+                <button onclick="resetAllData()" class="bg-red-600 hover:bg-red-700 text-white text-xs px-2.5 py-1.5 rounded transition flex items-center gap-1" title="إعادة ضبط البيانات">
+                    <i class="fa-solid fa-rotate"></i>
+                    <span class="hidden sm:inline">تهيئة</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 py-6 w-full flex-grow">
+
+        <!-- Top Controls: Selection of Municipality & Position -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 mb-6 no-print">
+            <div class="flex items-center justify-between border-b pb-3 mb-4">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-dzgreen"></i>
+                    تحديد إطار المسابقة والبلدية المستهدفة (الجماعات الإقليمية والأسلاك المشتركة)
+                </h2>
+                <span class="text-xs text-slate-500">مرسوم تنفيذي 08-04 و 08-05 المعدل والمتمم</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Municipality Select -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">البلدية المعنية (ولاية تلمسان)</label>
+                    <select id="selectMunicipality" onchange="updateCompetitionContext()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-semibold">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
+                <!-- Job Rank Select (Updated with All Common & Regional Corps) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">الرتبة / المنصب المطلوب</label>
+                    <select id="selectRank" onchange="updateCompetitionContext()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-semibold">
+                        <optgroup label="شعبة العمال المهنيين وسائقي السيارات والحراس">
+                            <option value="حارس">حارس (الصنف 01)</option>
+                            <option value="عامل مهني مستوى 1">عامل مهني من المستوى الأول (الصنف 01)</option>
+                            <option value="سائق سيارة من المستوى الأول">سائق سيارة من المستوى الأول - رخصة ب (الصنف 02)</option>
+                            <option value="عامل مهني مستوى 2">عامل مهني من المستوى الثاني (الصنف 03)</option>
+                            <option value="سائق سيارة من المستوى الثاني">سائق سيارة من المستوى الثاني - رخصة ج/د (الصنف 03)</option>
+                            <option value="عامل مهني مستوى 3">عامل مهني من المستوى الثالث (الصنف 05)</option>
+                            <option value="عامل مهني مستوى 4">عامل مهني من المستوى الرابع (الصنف 06)</option>
+                        </optgroup>
+                        <optgroup label="شعبة الإدارة العامة - الأسلاك المشتركة والجماعات الإقليمية">
+                            <option value="عون مكتب">عون مكتب (الصنف 05)</option>
+                            <option value="عون حفظ البيانات">عون حفظ البيانات (الصنف 06)</option>
+                            <option value="عون إدارة">عون إدارة (الصنف 07)</option>
+                            <option value="عون إدارة رئيسي">عون إدارة رئيسي (الصنف 08)</option>
+                            <option value="ملحق الإدارة">ملحق الإدارة (الصنف 09)</option>
+                            <option value="ملحق رئيسي للإدارة">ملحق رئيسي للإدارة (الصنف 10)</option>
+                            <option value="متصرف">متصرف (الصنف 12)</option>
+                            <option value="متصرف رئيسي">متصرف رئيسي (الصنف 13)</option>
+                            <option value="متصرف مستشار">متصرف مستشار (الصنف 14)</option>
+                        </optgroup>
+                        <optgroup label="الشعب التقنية والإعلام الآلي والمحاسبة">
+                            <option value="محاسب إداري">محاسب إداري (الصنف 08)</option>
+                            <option value="تقني في الإعلام الآلي">تقني في الإعلام الآلي (الصنف 08)</option>
+                            <option value="محاسب إداري رئيسي">محاسب إداري رئيسي (الصنف 10)</option>
+                            <option value="تقني سامي في الإعلام الآلي">تقني سامي في الإعلام الآلي (الصنف 10)</option>
+                            <option value="وثائقي أمين مكتبات">وثائقي أمين مكتبات (الصنف 11)</option>
+                            <option value="مهندس دولة في الإعلام الآلي">مهندس دولة في الإعلام الآلي (الصنف 13)</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- Open Posts Count -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">عدد المناصب المالية المفتوحة</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="openPostsInput" min="1" max="50" value="3" onchange="updateCompetitionContext()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-bold">
+                        <span class="text-xs bg-emerald-100 text-dzgreen font-bold px-3 py-2.5 rounded-lg border border-emerald-200 whitespace-nowrap">
+                            مناصب معتمدة
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dynamic Statistics Cards -->
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 no-print">
+            <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-500 font-bold">إجمالي المترشحين</p>
+                    <p id="kpiTotal" class="text-2xl font-black text-slate-800 mt-1">0</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-emerald-600 font-bold">المقبولون (قائمة الناجحين)</p>
+                    <p id="kpiPassed" class="text-2xl font-black text-emerald-600 mt-1">0</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-amber-600 font-bold">قائمة الانتظار</p>
+                    <p id="kpiWaiting" class="text-2xl font-black text-amber-600 mt-1">0</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-rose-600 font-bold">الملفات المرفوضة قانوناً</p>
+                    <p id="kpiRejected" class="text-2xl font-black text-rose-600 mt-1">0</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-user-slash"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Workspace Tabs -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6 no-print">
+            <div class="flex border-b border-slate-200 bg-slate-50/80 overflow-x-auto">
+                <button onclick="switchTab('candidates')" id="tabBtn-candidates" class="tab-btn px-5 py-3.5 text-sm font-bold border-b-2 border-dzgreen text-dzgreen bg-white flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-list-check"></i> قائمة المترشحين والتنقيط
+                </button>
+                <button onclick="switchTab('addCandidate')" id="tabBtn-addCandidate" class="tab-btn px-5 py-3.5 text-sm font-bold border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-user-plus"></i> تسجيل مترشح جديد
+                </button>
+                <button onclick="switchTab('audit')" id="tabBtn-audit" class="tab-btn px-5 py-3.5 text-sm font-bold border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-shield-halved"></i> سجل الرقابة والتفتيش (<span id="auditBadgeCount" class="text-xs bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded-full">0</span>)
+                </button>
+                <button onclick="switchTab('reports')" id="tabBtn-reports" class="tab-btn px-5 py-3.5 text-sm font-bold border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-file-signature"></i> المحاضر والتقارير الرسمية
+                </button>
+            </div>
+
+            <!-- TAB 1: Candidates List & Ranking -->
+            <div id="tabContent-candidates" class="p-4 sm:p-6 tab-content">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-3 mb-4">
+                    <div class="relative w-full md:w-72">
+                        <i class="fa-solid fa-magnifying-glass absolute right-3 top-3 text-slate-400"></i>
+                        <input type="text" id="searchInput" onkeyup="renderCandidatesTable()" placeholder="بحث بالاسم، اللقب أو ب.ت.و..." class="w-full bg-slate-50 border border-slate-300 pr-9 pl-3 py-2 rounded-lg text-sm focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                    <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                        <select id="filterStatus" onchange="renderCandidatesTable()" class="bg-slate-50 border border-slate-300 text-xs rounded-lg px-3 py-2 font-semibold text-slate-700">
+                            <option value="ALL">جميع الحالات</option>
+                            <option value="PASSED">الناجحون المقبولون</option>
+                            <option value="WAITING">قائمة الانتظار</option>
+                            <option value="REJECTED">المرفوضون قانوناً</option>
+                        </select>
+                        <button onclick="exportDataJSON()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs px-3 py-2 rounded-lg font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-download"></i> تصدير البيانات
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-sm text-right text-slate-600">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100/80 border-b border-slate-200">
+                            <tr>
+                                <th class="px-3 py-3 text-center">الرتبة</th>
+                                <th class="px-4 py-3">المترشح (الاسم واللقب)</th>
+                                <th class="px-3 py-3">المستوى / المؤهل</th>
+                                <th class="px-3 py-3 text-center">الخبرة (سنة)</th>
+                                <th class="px-3 py-3 text-center">الوضعية العائلية</th>
+                                <th class="px-3 py-3 text-center">المقابلة (/3)</th>
+                                <th class="px-3 py-3 text-center">المجموع النهائي</th>
+                                <th class="px-3 py-3 text-center">النتيجة والوضعية</th>
+                                <th class="px-3 py-3 text-center">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="candidatesTbody">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 2: Add / Edit Candidate Form -->
+            <div id="tabContent-addCandidate" class="p-4 sm:p-6 tab-content hidden">
+                <form id="candidateForm" onsubmit="handleCandidateSubmit(event)" class="space-y-6">
+                    <input type="hidden" id="editCandidateId" value="">
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h3 class="text-sm font-bold text-slate-800 mb-3 text-dzgreen flex items-center gap-2">
+                            <i class="fa-solid fa-address-card"></i> 1. الهوية والمعلومات الشخصية
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">اللقب *</label>
+                                <input type="text" id="candLastName" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">الاسم *</label>
+                                <input type="text" id="candFirstName" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">رقم بطاقة التعريف الوطنية *</label>
+                                <input type="text" id="candNIN" required pattern="[0-9]{9,18}" placeholder="مثال: 11823000..." class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">تاريخ الميلاد *</label>
+                                <input type="date" id="candBirthDate" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">بلدية الإقامة (ولاية تلمسان) *</label>
+                                <select id="candResidence" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-emerald-500">
+                                    <!-- Populated dynamically -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">وضعية الخدمة الوطنية *</label>
+                                <select id="candMilitary" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-emerald-500">
+                                    <option value="مؤدى">مؤدى (مؤدى الخدمة)</option>
+                                    <option value="معفى">معفى لأسباب طبية / عائلية</option>
+                                    <option value="مؤجل">تأجيل نافذ المفعول</option>
+                                    <option value="غير_مسوى">غير مسوى (سبب للرفض)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h3 class="text-sm font-bold text-slate-800 mb-3 text-dzgreen flex items-center gap-2">
+                            <i class="fa-solid fa-graduation-cap"></i> 2. المؤهل الدراسي والخبرة المهنية
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">المستوى الدراسي المصرح به *</label>
+                                <select id="candEducation" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-emerald-500">
+                                    <option value="ابتدائي">ابتدائي أو بدون شهادة</option>
+                                    <option value="متوسط">متوسط (السنة الرابعة متوسط)</option>
+                                    <option value="ثانوي">ثانوي (السنة الثالثة ثانوي)</option>
+                                    <option value="تكوين_مهني">شهادة الكفاءة المهنية / التقني (CAP / CQP / تقني)</option>
+                                    <option value="جامعي">جامعي (ليسانس / ماستر / تقني سامي / مهندس)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">سنوات الخبرة في القطاع العام (مؤكدة بـ CNAS) *</label>
+                                <input type="number" id="candExpPublic" min="0" max="30" value="0" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-emerald-500">
+                                <span class="text-[10px] text-slate-500">1 نقطة عن كل سنة (أقصى حد 6 نقاط)</span>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">سنوات الخبرة في القطاع الخاص (مؤكدة) *</label>
+                                <input type="number" id="candExpPrivate" min="0" max="30" value="0" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-emerald-500">
+                                <span class="text-[10px] text-slate-500">0.5 نقطة عن كل سنة (أقصى حد 3 نقاط)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <h3 class="text-sm font-bold text-slate-800 mb-3 text-dzgreen flex items-center gap-2">
+                            <i class="fa-solid fa-comments"></i> 3. الوضع العائلي ونتيجة المقابلة الشفهية
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">الوضعية العائلية *</label>
+                                <select id="candFamilyStatus" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-emerald-500">
+                                    <option value="أعزب">أعزب / عزباء (0 ن)</option>
+                                    <option value="متزوج">متزوج(ة) بدون أطفال (1 ن)</option>
+                                    <option value="متزوج_مع_أطفال">متزوج(ة) ولديه أطفال (2 ن)</option>
+                                    <option value="أرمل_أو_مطلق_بأطفال">أرمل/مطلق متكفل بالأطفال (2 ن)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">علامة المقابلة الشفهية مع اللجنة (من 0 إلى 3) *</label>
+                                <input type="number" id="candInterviewScore" step="0.25" min="0" max="3" value="2.0" required class="w-full border border-slate-300 rounded-lg p-2 text-sm font-bold text-emerald-700 focus:ring-emerald-500">
+                                <span class="text-[10px] text-slate-500">معيار القدرة والتحكم والإنضباط المقنن</span>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">مطابقة المستوى مع شرط الرتبة *</label>
+                                <select id="candMatchEligibility" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-emerald-500">
+                                    <option value="مستوفي">مستوفي للشروط القانونية للرتبة</option>
+                                    <option value="مستوى_أعلى">مستوى أعلى بكثير من المطلوب (ملاحظة تحفظية)</option>
+                                    <option value="مستوى_أقل">مستوى أدنى من الشرط (رفض تلقائي)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="button" onclick="switchTab('candidates')" class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold rounded-lg transition">
+                            إلغاء
+                        </button>
+                        <button type="submit" class="px-6 py-2.5 bg-dzgreen hover:bg-emerald-800 text-white text-sm font-bold rounded-lg shadow transition flex items-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i> حفظ وحساب التنقيط
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- TAB 3: Audit Log & Compliance Alerts -->
+            <div id="tabContent-audit" class="p-4 sm:p-6 tab-content hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+                            سجل التدقيق والتنبيهات النظامية الرقابية
+                        </h3>
+                        <p class="text-xs text-slate-500">يتم تسجيل كل الخروقات والتحفظات القانونية آلياً وفقاً لقانون الوظيفة العمومية</p>
+                    </div>
+                    <button onclick="clearAuditLog()" class="text-xs text-rose-600 hover:underline">
+                        مسح السجل
+                    </button>
+                </div>
+
+                <div id="auditLogContainer" class="space-y-3">
+                    <!-- Dynamic Log Items -->
+                </div>
+            </div>
+
+            <!-- TAB 4: Reports & Official Minutes Printable Preview -->
+            <div id="tabContent-reports" class="p-4 sm:p-6 tab-content hidden">
+                <div class="flex justify-between items-center mb-6 no-print">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">معاينة وطباعة المحاضر الرسمية</h3>
+                        <p class="text-xs text-slate-500">جاهزة للطباعة والتوقيع من طرف لجنة المسابقة ومفتشية الوظيفة العمومية</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="exportReportPDF()" class="bg-dzgreen text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-emerald-800 transition flex items-center gap-2">
+                            <i class="fa-solid fa-file-pdf"></i> حفظ / مشاركة المحضر (PDF)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Printable Document Box -->
+                <div id="printableArea" class="bg-white border p-8 rounded-lg shadow-sm text-slate-900 mx-auto max-w-4xl print-card">
+                    <div class="text-center font-bold space-y-1 mb-6 border-b pb-4">
+                        <p class="text-sm">الجمهورية الجزائرية الديمقراطية الشعبية</p>
+                        <p class="text-xs text-slate-600">وزارة الداخلية والجماعات المحلية والتهيئة العمرانية</p>
+                        <p class="text-xs text-slate-600">ولاية تلمسان - دائرة <span id="reportDistrictName">...</span></p>
+                        <p class="text-sm font-bold text-slate-800 mt-2">بلدية <span id="reportMuniName">...</span></p>
+                    </div>
+
+                    <div class="my-6 text-center">
+                        <h2 class="text-xl font-extrabold underline decoration-2 underline-offset-4 mb-2">محضر إعلان النتائج النهائية لمسابقة الانتقاء على أساس المقابلة</h2>
+                        <p class="text-xs text-slate-600">للالتحاق برتبة: <span id="reportRankName" class="font-bold text-slate-800">...</span> - السنة المالية: 2026</p>
+                        <p class="text-xs text-slate-600">عدد المناصب المالية المفتوحة: (<span id="reportPostsCount" class="font-bold">0</span>) مناصب</p>
+                    </div>
+
+                    <!-- Report Table 1: Accepted Candidates -->
+                    <div class="mb-6">
+                        <h4 class="font-bold text-xs bg-emerald-100 text-emerald-900 p-2 rounded mb-2 border border-emerald-200">أولاً: قائمة المترشحين الناجحين نهائياً (حسب ترتيب الاستحقاق)</h4>
+                        <table class="w-full text-xs border-collapse border border-slate-300 text-right">
+                            <thead class="bg-slate-100">
+                                <tr>
+                                    <th class="border border-slate-300 p-1.5 text-center">الترتيب</th>
+                                    <th class="border border-slate-300 p-1.5">اللقب والاسم</th>
+                                    <th class="border border-slate-300 p-1.5 text-center">تاريخ الميلاد</th>
+                                    <th class="border border-slate-300 p-1.5 text-center">مجموع النقاط (/15)</th>
+                                    <th class="border border-slate-300 p-1.5">الملاحظات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportPassedTbody">
+                                <!-- JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Report Table 2: Waiting List -->
+                    <div class="mb-6">
+                        <h4 class="font-bold text-xs bg-amber-100 text-amber-900 p-2 rounded mb-2 border border-amber-200">ثانياً: قائمة الانتظار</h4>
+                        <table class="w-full text-xs border-collapse border border-slate-300 text-right">
+                            <thead class="bg-slate-100">
+                                <tr>
+                                    <th class="border border-slate-300 p-1.5 text-center">الترتيب</th>
+                                    <th class="border border-slate-300 p-1.5">اللقب والاسم</th>
+                                    <th class="border border-slate-300 p-1.5 text-center">تاريخ الميلاد</th>
+                                    <th class="border border-slate-300 p-1.5 text-center">مجموع النقاط</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportWaitingTbody">
+                                <!-- JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Signatures Section -->
+                    <div class="grid grid-cols-3 gap-4 text-center text-xs mt-12 pt-6 border-t border-slate-300">
+                        <div>
+                            <p class="font-bold">أعضاء لجنة الانتقاء</p>
+                            <div class="h-16"></div>
+                            <p class="text-slate-400 text-[10px]">التوقيع والأختام</p>
+                        </div>
+                        <div>
+                            <p class="font-bold">رئيس المجلس الشعبي البلدي</p>
+                            <div class="h-16"></div>
+                            <p class="text-slate-400 text-[10px]">التوقيع والختم الرسمي</p>
+                        </div>
+                        <div>
+                            <p class="font-bold">مفتش الوظيفة العمومية لولاية تلمسان</p>
+                            <div class="h-16"></div>
+                            <p class="text-slate-400 text-[10px]">ملاحظة واعتماد المفتشية</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="bg-slate-800 text-slate-400 text-xs py-4 no-print mt-auto border-t border-slate-700">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-center sm:text-right">
+            <div>
+                <p class="font-semibold text-slate-300">تطبيق الرقابة والتدقيق في مسابقات الجماعات المحلية - ولاية تلمسان</p>
+                <p class="text-[11px] text-slate-500">مصمم لتسهيل المطابقة للتشريع والتنظيم المعمول بهما في الوظيفة العمومية الجزائرية</p>
+            </div>
+            <div class="text-left">
+                <span class="bg-slate-700 text-slate-300 px-2 py-1 rounded text-[10px]">تلمسان 13000 - الجزائر</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- DATA STRUCTURES & DATA PRESETS ---
+        const TLEMCEN_MUNICIPALITIES = [
+            { name: "تلمسان", district: "تلمسان" },
+            { name: "منصورة", district: "منصورة" },
+            { name: "سبدو", district: "سبدو" },
+            { name: "مغنية", district: "مغنية" },
+            { name: "الرمشي", district: "الرمشي" },
+            { name: "الغزوات", district: "الغزوات" },
+            { name: "شتوان", district: "شتوان" },
+            { name: "ندرومة", district: "ندرومة" },
+            { name: "حناية", district: "حناية" },
+            { name: "أولاد ميمون", district: "أولاد ميمون" },
+            { name: "سيدي الجيلالي", district: "سيدي الجيلالي" },
+            { name: "بني بوسعيد", district: "بني بوسعيد" },
+            { name: "صبرة", district: "صبرة" },
+            { name: "مرسى بن مهيدي", district: "مرسى بن مهيدي" },
+            { name: "فلاوسن", district: "فلاوسن" },
+            { name: "بني سنوس", district: "بني سنوس" },
+            { name: "العريشة", district: "سبدو" },
+            { name: "سيدي مجاهد", district: "بني بوسعيد" },
+            { name: "السواحلية", district: "الغزوات" },
+            { name: "تيانت", district: "الغزوات" },
+            { name: "دار يغمراسن", district: "الغزوات" },
+            { name: "بوحلو", district: "صبرة" },
+            { name: "جبالة", district: "ندرومة" },
+            { name: "بني ورسوس", district: "الرمشي" },
+            { name: "عين يوسف", district: "الرمشي" },
+            { name: "السبعة شيوخ", district: "الرمشي" },
+            { name: "الفحول", district: "الرمشي" },
+            { name: "القور", district: "سبدو" },
+            { name: "باب العسة", district: "باب العسة" },
+            { name: "السواني", district: "باب العسة" },
+            { name: "سوق الثلاثاء", district: "باب العسة" },
+            { name: "تيرني بني هديل", district: "منصورة" },
+            { name: "عين غرابة", district: "منصورة" },
+            { name: "بني مستار", district: "منصورة" },
+            { name: "واد الشولي", district: "أولاد ميمون" },
+            { name: "بني صميل", district: "أولاد ميمون" },
+            { name: "البويهي", district: "سيدي الجيلالي" },
+            { name: "عين فزة", district: "شتوان" },
+            { name: "عمير", district: "شتوان" },
+            { name: "هنين", district: "هنين" },
+            { name: "بني خلاد", district: "هنين" },
+            { name: "العزايل", district: "بني سنوس" },
+            { name: "بني بهدل", district: "بني سنوس" },
+            { name: "مسيردة الفواقة", district: "مرسى بن مهيدي" },
+            { name: "عين فتاح", district: "فلاوسن" },
+            { name: "العين الكبيرة", district: "فلاوسن" },
+            { name: "عين تالوت", district: "عين تالوت" },
+            { name: "عين النحالة", district: "عين تالوت" },
+            { name: "بن سكران", district: "بن سكران" },
+            { name: "سيدي عبد اللي", district: "بن سكران" },
+            { name: "أولاد رياح", district: "حناية" },
+            { name: "زناتة", district: "حناية" },
+            { name: "حمام بوغرارة", district: "مغنية" }
+        ];
+
+        // Default Initial Mock Candidates for Tlemcen
+        const INITIAL_CANDIDATES = [
+            {
+                id: "CAND-001",
+                lastName: "بن علي",
+                firstName: "محمد",
+                nin: "118200001122",
+                birthDate: "1991-05-14",
+                residence: "تلمسان",
+                military: "مؤدى",
+                education: "متوسط",
+                expPublic: 4,
+                expPrivate: 1,
+                familyStatus: "متزوج_مع_أطفال",
+                interviewScore: 2.75,
+                matchEligibility: "مستوفي",
+                rank: "حارس"
+            },
+            {
+                id: "CAND-002",
+                lastName: "بومدين",
+                firstName: "عبد القادر",
+                nin: "118200004455",
+                birthDate: "1988-11-20",
+                residence: "منصورة",
+                military: "معفى",
+                education: "ثانوي",
+                expPublic: 6,
+                expPrivate: 2,
+                familyStatus: "متزوج_مع_أطفال",
+                interviewScore: 3.0,
+                matchEligibility: "مستوفي",
+                rank: "حارس"
+            },
+            {
+                id: "CAND-003",
+                lastName: "سليماني",
+                firstName: "ياسين",
+                nin: "118200008899",
+                birthDate: "1995-02-10",
+                residence: "سبدو",
+                military: "مؤجل",
+                education: "ابتدائي",
+                expPublic: 1,
+                expPrivate: 0,
+                familyStatus: "أعزب",
+                interviewScore: 1.5,
+                matchEligibility: "مستوفي",
+                rank: "حارس"
+            },
+            {
+                id: "CAND-004",
+                lastName: "رحماني",
+                firstName: "توفيق",
+                nin: "118200003311",
+                birthDate: "1993-08-19",
+                residence: "مغنية",
+                military: "غير_مسوى",
+                education: "متوسط",
+                expPublic: 2,
+                expPrivate: 0,
+                familyStatus: "متزوج",
+                interviewScore: 2.0,
+                matchEligibility: "مستوفي",
+                rank: "حارس"
+            }
+        ];
+
+        // State Management Variables
+        let currentMunicipality = "تلمسان";
+        let currentRank = "حارس";
+        let openPostsCount = 3;
+        let candidatesList = [];
+        let auditLogs = [];
+
+        // --- APP INITIALIZATION ---
+        window.onload = function() {
+            populateMunicipalitiesSelects();
+            loadStateFromLocalStorage();
+            updateCompetitionContext();
+            addAuditLog("تم تشغيل نظام الرقابة والتدقيق لولاية تلمسان بنجاح (مع الشامل للأسلاك والجماعات الإقليمية).", "INFO");
+        };
+
+        function populateMunicipalitiesSelects() {
+            const selectMuni = document.getElementById('selectMunicipality');
+            const candRes = document.getElementById('candResidence');
+
+            selectMuni.innerHTML = '';
+            candRes.innerHTML = '';
+
+            [...TLEMCEN_MUNICIPALITIES].sort((a, b) => a.name.localeCompare(b.name, 'ar')).forEach(m => {
+                const opt1 = document.createElement('option');
+                opt1.value = m.name;
+                opt1.textContent = `بلدية ${m.name} (دائرة ${m.district})`;
+                if (m.name === 'تلمسان') opt1.defaultSelected = true;
+                selectMuni.appendChild(opt1);
+
+                const opt2 = document.createElement('option');
+                opt2.value = m.name;
+                opt2.textContent = m.name;
+                if (m.name === 'تلمسان') opt2.defaultSelected = true;
+                candRes.appendChild(opt2);
+            });
+        }
+
+        function loadStateFromLocalStorage() {
+            const saved = localStorage.getItem('tlemcen_audit_candidates_v2');
+            if (saved) {
+                try {
+                    candidatesList = JSON.parse(saved);
+                } catch(e) {
+                    candidatesList = [...INITIAL_CANDIDATES];
+                }
+            } else {
+                candidatesList = [...INITIAL_CANDIDATES];
+            }
+        }
+
+        function saveStateToLocalStorage() {
+            localStorage.setItem('tlemcen_audit_candidates_v2', JSON.stringify(candidatesList));
+        }
+
+        function resetAllData() {
+            if(confirm("هل أنت تأكد من إعادة تهيئة كافة البيانات إلى الحالة الافتراضية؟")) {
+                candidatesList = [...INITIAL_CANDIDATES];
+                auditLogs = [];
+                saveStateToLocalStorage();
+                updateCompetitionContext();
+                addAuditLog("تمت إعادة تهيئة قواعد البيانات والمترشحين.", "WARN");
+            }
+        }
+
+        // --- ALGERIAN LEGAL SCORING ENGINE ---
+        function calculateCandidateScore(cand) {
+            let score = 0;
+
+            if (cand.military === 'غير_مسوى') {
+                return { total: 0, status: 'REJECTED', reason: 'الوضعية تجاه الخدمة الوطنية غير مسواة (مانع قانوني)' };
+            }
+            if (cand.matchEligibility === 'مستوى_أقل') {
+                return { total: 0, status: 'REJECTED', reason: 'المستوى الدراسي أدنى من الشرط القانوني المطلوب للرتبة' };
+            }
+
+            let eduScore = 1;
+            if (cand.education === 'متوسط') eduScore = 2;
+            else if (cand.education === 'ثانوي' || cand.education === 'تكوين_مهني') eduScore = 3;
+            else if (cand.education === 'جامعي') eduScore = 3;
+            score += eduScore;
+
+            const pubExpPts = Math.min(6, (parseFloat(cand.expPublic) || 0) * 1.0);
+            const privExpPts = Math.min(3, (parseFloat(cand.expPrivate) || 0) * 0.5);
+            score += pubExpPts + privExpPts;
+
+            let familyScore = 0;
+            if (cand.familyStatus === 'متزوج') familyScore = 1;
+            else if (cand.familyStatus === 'متزوج_مع_أطفال' || cand.familyStatus === 'أرمل_أو_مطلق_بأطفال') familyScore = 2;
+            score += familyScore;
+
+            const interview = Math.min(3, Math.max(0, parseFloat(cand.interviewScore) || 0));
+            score += interview;
+
+            return {
+                total: parseFloat(score.toFixed(2)),
+                status: 'ELIGIBLE',
+                reason: null
+            };
+        }
+
+        // --- CONTEXT & RANKING COMPUTATION ---
+        function updateCompetitionContext() {
+            currentMunicipality = document.getElementById('selectMunicipality').value;
+            currentRank = document.getElementById('selectRank').value;
+            openPostsCount = parseInt(document.getElementById('openPostsInput').value) || 1;
+
+            if (openPostsCount > 15) {
+                addAuditLog(`تنبيه تدقيق: عدد المناصب المفتوحة (${openPostsCount}) كبير جداً بالنسبة لبلدية ${currentMunicipality}. يتطلب رخصة استثنائية.`, "WARN");
+            }
+
+            renderCandidatesTable();
+            updateKPIs();
+            renderPrintableReports();
+        }
+
+        function getProcessedCandidates() {
+            let list = candidatesList.filter(c => c.rank === currentRank || !c.rank);
+
+            list = list.map(c => {
+                const evalRes = calculateCandidateScore(c);
+                return {
+                    ...c,
+                    score: evalRes.total,
+                    isRejected: evalRes.status === 'REJECTED',
+                    rejectionReason: evalRes.reason
+                };
+            });
+
+            list.sort((a, b) => {
+                if (a.isRejected && !b.isRejected) return 1;
+                if (!a.isRejected && b.isRejected) return -1;
+                if (b.score !== a.score) return b.score - a.score;
+                return new Date(a.birthDate) - new Date(b.birthDate);
+            });
+
+            let eligibleCount = 0;
+            return list.map(cand => {
+                if (cand.isRejected) {
+                    return { ...cand, status: 'REJECTED' };
+                }
+                eligibleCount++;
+                if (eligibleCount <= openPostsCount) {
+                    return { ...cand, status: 'PASSED', rankPosition: eligibleCount };
+                } else {
+                    return { ...cand, status: 'WAITING', rankPosition: eligibleCount };
+                }
+            });
+        }
+
+        // --- RENDER FUNCTIONS ---
+        function renderCandidatesTable() {
+            const tbody = document.getElementById('candidatesTbody');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const filter = document.getElementById('filterStatus').value;
+
+            const processed = getProcessedCandidates();
+            tbody.innerHTML = '';
+
+            let filtered = processed.filter(c => {
+                const nameMatch = (c.firstName + ' ' + c.lastName + ' ' + c.nin).toLowerCase().includes(search);
+                if (filter === 'ALL') return nameMatch;
+                return nameMatch && c.status === filter;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-400">لا يوجد مترشحون مطابقون لمعايير البحث الحالية</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-200 hover:bg-slate-50/80 transition";
+
+                let statusBadge = '';
+                if (c.status === 'PASSED') {
+                    statusBadge = `<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-bold border border-emerald-300">مقبول (رقم ${c.rankPosition})</span>`;
+                } else if (c.status === 'WAITING') {
+                    statusBadge = `<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-bold border border-amber-300">إنتظار (رقم ${c.rankPosition})</span>`;
+                } else {
+                    statusBadge = `<span class="bg-rose-100 text-rose-800 text-xs px-2.5 py-1 rounded-full font-bold border border-rose-300">مرفوض قانوناً</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="px-3 py-3 text-center text-xs font-semibold text-slate-500">${c.rank || currentRank}</td>
+                    <td class="px-4 py-3 font-bold text-slate-800">
+                        ${c.lastName} ${c.firstName}
+                        <div class="text-[10px] text-slate-400 font-normal">ب.ت.و: ${c.nin} | ${c.residence}</div>
+                    </td>
+                    <td class="px-3 py-3 text-xs">${c.education}</td>
+                    <td class="px-3 py-3 text-center font-semibold">${(c.expPublic||0) + (c.expPrivate||0)} سنة</td>
+                    <td class="px-3 py-3 text-center text-xs">${c.familyStatus.replace(/_/g, ' ')}</td>
+                    <td class="px-3 py-3 text-center font-bold text-emerald-700">${c.interviewScore} /3</td>
+                    <td class="px-3 py-3 text-center text-base font-black ${c.isRejected ? 'text-slate-400' : 'text-dzgreen'}">${c.score} ن</td>
+                    <td class="px-3 py-3 text-center">${statusBadge}</td>
+                    <td class="px-3 py-3 text-center space-x-1 space-x-reverse">
+                        <button onclick="editCandidate('${c.id}')" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded" title="تعديل"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deleteCandidate('${c.id}')" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded" title="حذف"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateKPIs() {
+            const processed = getProcessedCandidates();
+            document.getElementById('kpiTotal').textContent = processed.length;
+            document.getElementById('kpiPassed').textContent = processed.filter(c => c.status === 'PASSED').length;
+            document.getElementById('kpiWaiting').textContent = processed.filter(c => c.status === 'WAITING').length;
+            document.getElementById('kpiRejected').textContent = processed.filter(c => c.status === 'REJECTED').length;
+        }
+
+        // --- SUBMIT & FORM HANDLING ---
+        function handleCandidateSubmit(e) {
+            e.preventDefault();
+
+            const editId = document.getElementById('editCandidateId').value;
+            const candData = {
+                id: editId ? editId : 'CAND-' + Date.now(),
+                lastName: document.getElementById('candLastName').value.trim(),
+                firstName: document.getElementById('candFirstName').value.trim(),
+                nin: document.getElementById('candNIN').value.trim(),
+                birthDate: document.getElementById('candBirthDate').value,
+                residence: document.getElementById('candResidence').value,
+                military: document.getElementById('candMilitary').value,
+                education: document.getElementById('candEducation').value,
+                expPublic: parseFloat(document.getElementById('candExpPublic').value) || 0,
+                expPrivate: parseFloat(document.getElementById('candExpPrivate').value) || 0,
+                familyStatus: document.getElementById('candFamilyStatus').value,
+                interviewScore: parseFloat(document.getElementById('candInterviewScore').value) || 0,
+                matchEligibility: document.getElementById('candMatchEligibility').value,
+                rank: currentRank
+            };
+
+            const duplicateNIN = candidatesList.find(c => c.nin === candData.nin && c.id !== candData.id);
+            if (duplicateNIN) {
+                addAuditLog(`تنبيه تدقيق شديد: محاولة إدخال رقم بطاقة تعريف مكرر (${candData.nin}) للمترشح ${candData.lastName} ${candData.firstName}.`, "DANGER");
+                alert("خطأ رقابي: رقم بطاقة التعريف الوطنية مسجل بالفعل لمترشح آخر!");
+                return;
+            }
+
+            if (editId) {
+                const idx = candidatesList.findIndex(c => c.id === editId);
+                if (idx !== -1) candidatesList[idx] = candData;
+                addAuditLog(`تعديل بيانات المترشح: ${candData.lastName} ${candData.firstName}`, "INFO");
+            } else {
+                candidatesList.push(candData);
+                addAuditLog(`إضافة مترشح جديد: ${candData.lastName} ${candData.firstName} لبلدية ${currentMunicipality}`, "SUCCESS");
+            }
+
+            saveStateToLocalStorage();
+            document.getElementById('candidateForm').reset();
+            document.getElementById('editCandidateId').value = '';
+            switchTab('candidates');
+            updateCompetitionContext();
+        }
+
+        function editCandidate(id) {
+            const cand = candidatesList.find(c => c.id === id);
+            if (!cand) return;
+
+            document.getElementById('editCandidateId').value = cand.id;
+            document.getElementById('candLastName').value = cand.lastName;
+            document.getElementById('candFirstName').value = cand.firstName;
+            document.getElementById('candNIN').value = cand.nin;
+            document.getElementById('candBirthDate').value = cand.birthDate;
+            document.getElementById('candResidence').value = cand.residence || currentMunicipality;
+            document.getElementById('candMilitary').value = cand.military;
+            document.getElementById('candEducation').value = cand.education;
+            document.getElementById('candExpPublic').value = cand.expPublic;
+            document.getElementById('candExpPrivate').value = cand.expPrivate;
+            document.getElementById('candFamilyStatus').value = cand.familyStatus;
+            document.getElementById('candInterviewScore').value = cand.interviewScore;
+            document.getElementById('candMatchEligibility').value = cand.matchEligibility || "مستوفي";
+
+            switchTab('addCandidate');
+        }
+
+        function deleteCandidate(id) {
+            const cand = candidatesList.find(c => c.id === id);
+            if (confirm(`هل أنت متأكد من حذف ملف المترشح: ${cand ? cand.lastName + ' ' + cand.firstName : ''}؟`)) {
+                candidatesList = candidatesList.filter(c => c.id !== id);
+                saveStateToLocalStorage();
+                addAuditLog(`حذف ملف المترشح ID: ${id}`, "WARN");
+                updateCompetitionContext();
+            }
+        }
+
+        // --- AUDIT LOG & COMPLIANCE SYSTEM ---
+        function addAuditLog(message, type = "INFO") {
+            const timeStr = new Date().toLocaleTimeString('ar-DZ');
+            auditLogs.unshift({ message, type, time: timeStr });
+            renderAuditLogs();
+        }
+
+        function renderAuditLogs() {
+            const container = document.getElementById('auditLogContainer');
+            const badge = document.getElementById('auditBadgeCount');
+            if (!container) return;
+
+            badge.textContent = auditLogs.length;
+            container.innerHTML = '';
+
+            if (auditLogs.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-slate-400 py-6">لا توجد ملاحظات أو تنبيهات رقابية مسجلة حالياً</p>`;
+                return;
+            }
+
+            auditLogs.forEach(log => {
+                let borderClass = "border-blue-500 bg-blue-50 text-blue-800";
+                let icon = "fa-circle-info";
+
+                if (log.type === "WARN") {
+                    borderClass = "border-amber-500 bg-amber-50 text-amber-800";
+                    icon = "fa-triangle-exclamation";
+                } else if (log.type === "DANGER") {
+                    borderClass = "border-rose-500 bg-rose-50 text-rose-800";
+                    icon = "fa-circle-xmark";
+                } else if (log.type === "SUCCESS") {
+                    borderClass = "border-emerald-500 bg-emerald-50 text-emerald-800";
+                    icon = "fa-circle-check";
+                }
+
+                const div = document.createElement('div');
+                div.className = `p-3 rounded-lg border-r-4 text-xs font-semibold flex items-center justify-between shadow-sm ${borderClass}`;
+                div.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid ${icon}"></i>
+                        <span>${log.message}</span>
+                    </div>
+                    <span class="text-[10px] opacity-75">${log.time}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function clearAuditLog() {
+            auditLogs = [];
+            renderAuditLogs();
+        }
+
+        // --- PRINTABLE REPORTS GENERATOR ---
+        function renderPrintableReports() {
+            const munObj = TLEMCEN_MUNICIPALITIES.find(m => m.name === currentMunicipality) || { district: currentMunicipality };
+            document.getElementById('reportMuniName').textContent = currentMunicipality;
+            document.getElementById('reportDistrictName').textContent = munObj.district;
+            document.getElementById('reportRankName').textContent = currentRank;
+            document.getElementById('reportPostsCount').textContent = openPostsCount;
+
+            const processed = getProcessedCandidates();
+            const passed = processed.filter(c => c.status === 'PASSED');
+            const waiting = processed.filter(c => c.status === 'WAITING');
+
+            const passedTbody = document.getElementById('reportPassedTbody');
+            const waitingTbody = document.getElementById('reportWaitingTbody');
+
+            passedTbody.innerHTML = '';
+            waitingTbody.innerHTML = '';
+
+            if (passed.length === 0) {
+                passedTbody.innerHTML = `<tr><td colspan="5" class="text-center py-2 text-slate-400">لا يوجد ناجحون معتمدون في هذه الرتبة</td></tr>`;
+            } else {
+                passed.forEach((c, i) => {
+                    passedTbody.innerHTML += `
+                        <tr>
+                            <td class="border border-slate-300 p-1.5 text-center font-bold">${i + 1}</td>
+                            <td class="border border-slate-300 p-1.5 font-bold">${c.lastName} ${c.firstName}</td>
+                            <td class="border border-slate-300 p-1.5 text-center">${c.birthDate}</td>
+                            <td class="border border-slate-300 p-1.5 text-center font-bold">${c.score}</td>
+                            <td class="border border-slate-300 p-1.5 text-xs text-emerald-700">مقبول في المنصب رقم (${i + 1})</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            if (waiting.length === 0) {
+                waitingTbody.innerHTML = `<tr><td colspan="4" class="text-center py-2 text-slate-400">لا توجد أسماء في قائمة الانتظار</td></tr>`;
+            } else {
+                waiting.forEach((c, i) => {
+                    waitingTbody.innerHTML += `
+                        <tr>
+                            <td class="border border-slate-300 p-1.5 text-center font-bold">${i + 1}</td>
+                            <td class="border border-slate-300 p-1.5">${c.lastName} ${c.firstName}</td>
+                            <td class="border border-slate-300 p-1.5 text-center">${c.birthDate}</td>
+                            <td class="border border-slate-300 p-1.5 text-center font-bold">${c.score}</td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        // --- TAB SWITCHER & UTILS ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-dzgreen', 'text-dzgreen', 'bg-white');
+                btn.classList.add('border-transparent', 'text-slate-600');
+            });
+
+            const content = document.getElementById(`tabContent-${tabId}`);
+            const btn = document.getElementById(`tabBtn-${tabId}`);
+
+            if (content) content.classList.remove('hidden');
+            if (btn) {
+                btn.classList.add('border-dzgreen', 'text-dzgreen', 'bg-white');
+                btn.classList.remove('border-transparent', 'text-slate-600');
+            }
+        }
+
+        function isNativeApp() {
+            return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+        }
+
+        async function saveAndShareFile(filename, data, isBase64) {
+            const Filesystem = window.Capacitor.Plugins.Filesystem;
+            const Share = window.Capacitor.Plugins.Share;
+            const opts = { path: filename, data: data, directory: 'CACHE' };
+            if (!isBase64) opts.encoding = 'utf8';
+            const written = await Filesystem.writeFile(opts);
+            await Share.share({ title: filename, url: written.uri, dialogTitle: 'حفظ أو مشاركة الملف' });
+        }
+
+        function browserDownload(filename, blob) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        async function exportDataJSON() {
+            const json = JSON.stringify(candidatesList, null, 2);
+            const filename = `tlemcen_recruitment_${currentMunicipality}.json`;
+            try {
+                if (isNativeApp()) {
+                    await saveAndShareFile(filename, json, false);
+                } else {
+                    browserDownload(filename, new Blob([json], { type: 'application/json' }));
+                }
+                addAuditLog('تم تصدير نسخة احتياطية من بيانات المترشحين.', 'SUCCESS');
+            } catch (err) {
+                if (err && /cancel|dismiss/i.test(String(err.message || err))) return;
+                addAuditLog('تعذر تصدير البيانات: ' + (err && err.message ? err.message : err), 'DANGER');
+                alert('تعذر تصدير البيانات.');
+            }
+        }
+
+        async function exportReportPDF() {
+            const area = document.getElementById('printableArea');
+            if (!area || !window.jspdf || !window.html2canvas) {
+                window.print();
+                return;
+            }
+            try {
+                const canvas = await html2canvas(area, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pageW = pdf.internal.pageSize.getWidth();
+                const pageH = pdf.internal.pageSize.getHeight();
+                const margin = 8;
+                const imgW = pageW - margin * 2;
+                const pxPerMm = canvas.width / imgW;
+                const sliceHpx = Math.floor((pageH - margin * 2) * pxPerMm);
+
+                let y = 0, page = 0;
+                while (y < canvas.height) {
+                    const h = Math.min(sliceHpx, canvas.height - y);
+                    const slice = document.createElement('canvas');
+                    slice.width = canvas.width;
+                    slice.height = h;
+                    slice.getContext('2d').drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+                    if (page > 0) pdf.addPage();
+                    pdf.addImage(slice.toDataURL('image/jpeg', 0.92), 'JPEG', margin, margin, imgW, h / pxPerMm);
+                    y += h;
+                    page++;
+                }
+
+                const filename = `PV_${currentMunicipality}_${currentRank}.pdf`.replace(/\s+/g, '_');
+                if (isNativeApp()) {
+                    const dataUri = pdf.output('datauristring');
+                    await saveAndShareFile(filename, dataUri.split(',')[1], true);
+                } else {
+                    pdf.save(filename);
+                }
+            } catch (err) {
+                if (err && /cancel|dismiss/i.test(String(err.message || err))) return;
+                alert('تعذر إنشاء ملف PDF: ' + (err && err.message ? err.message : err));
+            }
+        }
+    </script>
+</body>
+</html>
+
